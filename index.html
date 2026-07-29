@@ -550,7 +550,7 @@ function renderClients() {
         <div class="client-row"><span class="label">关键决策人</span><span class="value">${contactLabel}</span></div>
         <div class="client-row"><span class="label">年度合同额</span><span class="value">${c.annualCur||'0'}万 / 目标${c.annualTarget||'0'}万</span></div>
         ${c.risks ? `<div class="risk-tags">${c.risks.split(',').map(r=>`<span class="risk-tag">⚠ ${r.trim()}</span>`).join('')}</div>` : ''}
-        <div class="next-action"><span>📍 ${c.nextAction||'-'}</span><span class="deadline">${c.deadline||''}</span></div>
+        <div class="next-action"><span>📍 ${c.nextAction||'-'}</span><span class="deadline">${fmtDeadline(c.deadline)}</span></div>
       </div>
     </div>`;
   }).join('');
@@ -569,7 +569,7 @@ function renderTasks() {
   const sections = ['今日待办','本周重点','月度目标','季度战役','年度版图'];
   const pMap = { high:'var(--red)', mid:'var(--yellow)', low:'var(--green)' };
   board.innerHTML = sections.map((title,si) => {
-    const items = tasks.filter(t => t.section === title);
+    const items = tasks.filter(t => t.section === title).sort((a,b) => dlSortKey(a) - dlSortKey(b));
     const undone = items.filter(t => !t.done).length;
     return `
       <div class="task-section collapsed" id="ts-${si}">
@@ -587,7 +587,7 @@ function renderTasks() {
                 <div class="task-meta">
                   ${t.client ? `<span class="task-client-tag">${t.client}</span>` : ''}
                   <span class="priority-dot" style="background:${pMap[t.priority]||'var(--text4)'}"></span>
-                  ${t.deadline ? `<span class="task-deadline">⏰ ${t.deadline}</span>` : ''}
+                  ${t.deadline ? `<span class="task-deadline">⏰ ${fmtDeadline(t.deadline)}</span>` : ''}
                 </div>
               </div>
             </div>
@@ -628,7 +628,7 @@ function renderIntel() {
       </div>
       <div class="intel-client">📌 ${i.client||'-'}</div>
       <div class="intel-content">${i.content}</div>
-      <div class="intel-time">${i.time||''}</div>
+      <div class="intel-time">${fmtDate(i.time)}</div>
     </div>
   `).join('');
 }
@@ -911,6 +911,44 @@ function removeContactRow(btn) {
 function escapeHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+// ===== 日期/时间选择器辅助 =====
+function isValidDT(v){ return typeof v==='string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v); }
+function isValidDate(v){ return typeof v==='string' && /^\d{4}-\d{2}-\d{2}$/.test(v); }
+function _dayPrefix(d){
+  const now=new Date(), tom=new Date(now), yest=new Date(now);
+  tom.setDate(now.getDate()+1); yest.setDate(now.getDate()-1);
+  if (d.toDateString()===now.toDateString()) return '今天 ';
+  if (d.toDateString()===tom.toDateString()) return '明天 ';
+  if (d.toDateString()===yest.toDateString()) return '昨天 ';
+  return '';
+}
+function fmtDeadline(v){
+  if (isValidDT(v)) {
+    const d=new Date(v);
+    const p=_dayPrefix(d);
+    const mm=String(d.getMonth()+1).padStart(2,'0');
+    const dd=String(d.getDate()).padStart(2,'0');
+    const hh=String(d.getHours()).padStart(2,'0');
+    const mi=String(d.getMinutes()).padStart(2,'0');
+    return p+mm+'-'+dd+' '+hh+':'+mi;
+  }
+  return v||'';
+}
+function fmtDate(v){
+  if (isValidDate(v)) {
+    const d=new Date(v+'T00:00:00');
+    const p=_dayPrefix(d);
+    if (p) return p.trim();
+    const mm=String(d.getMonth()+1).padStart(2,'0');
+    const dd=String(d.getDate()).padStart(2,'0');
+    return mm+'-'+dd;
+  }
+  return v||'';
+}
+function dlSortKey(t){
+  if (isValidDT(t.deadline)) return new Date(t.deadline).getTime();
+  return Infinity;
+}
 function clientFormHTML(c={}) {
   return `
     <div class="form-group"><label class="form-label">客户名称 *</label><input class="form-input" id="f-name" placeholder="如：华为技术有限公司" value="${c.name||''}"></div>
@@ -952,7 +990,7 @@ function clientFormHTML(c={}) {
       <div class="form-group"><label class="form-label">目标合同额(万)</label><input class="form-input" id="f-annualTarget" type="number" placeholder="如：3500" value="${c.annualTarget||''}"></div>
     </div>
     <div class="form-group"><label class="form-label">下一步行动</label><input class="form-input" id="f-nextAction" placeholder="如：推进框架合同签署" value="${c.nextAction||''}"></div>
-    <div class="form-group"><label class="form-label">Deadline</label><input class="form-input" id="f-deadline" placeholder="如：今天 18:00" value="${c.deadline||''}"></div>
+    <div class="form-group"><label class="form-label">Deadline（可选）</label><input class="form-input" id="f-deadline" type="datetime-local" value="${isValidDT(c.deadline)?c.deadline:''}"><input type="hidden" id="f-deadline-raw" value="${escapeHtml(c.deadline||'')}"><div style="font-size:11px;color:var(--text3);margin-top:4px">选好日期+时间，可按截止时间管理先后</div></div>
     <div class="form-group"><label class="form-label">风险标签（逗号分隔）</label><input class="form-input" id="f-risks" placeholder="如：预算削减,竞品介入" value="${c.risks||''}"></div>
     <div class="form-group notes-section">
       <label class="form-label">重要事项记录</label>
@@ -994,7 +1032,7 @@ function taskFormHTML(t={}) {
     <div class="form-row">
       <div class="form-group"><label class="form-label">关联客户</label>
         <select class="form-select" id="f-client"><option value="">无</option>${clientOptions}</select></div>
-      <div class="form-group"><label class="form-label">Deadline</label><input class="form-input" id="f-deadline" placeholder="如：今天 18:00" value="${t.deadline||''}"></div>
+      <div class="form-group"><label class="form-label">Deadline（可选）</label><input class="form-input" id="f-deadline" type="datetime-local" value="${isValidDT(t.deadline)?t.deadline:''}"><input type="hidden" id="f-deadline-raw" value="${escapeHtml(t.deadline||'')}"></div>
     </div>
     <div class="form-group"><label class="form-label">优先级</label>
       <div class="seg-control" id="f-priority">
@@ -1040,7 +1078,7 @@ function intelFormHTML(i={}) {
         <button class="seg-btn ${i.impact==='low'?'active':''}" onclick="segSelect(this)" data-val="low">🟢 低</button>
       </div></div>
     <div class="form-group"><label class="form-label">情报内容 *</label><textarea class="form-textarea" id="f-content" placeholder="输入情报内容..." style="min-height:100px">${i.content||''}</textarea></div>
-    <div class="form-group"><label class="form-label">时间</label><input class="form-input" id="f-time" placeholder="如：2小时前" value="${i.time||''}"></div>
+    <div class="form-group"><label class="form-label">时间（可选，日历选择）</label><input class="form-input" id="f-time" type="date" value="${isValidDate(i.time)?i.time:''}"><input type="hidden" id="f-time-raw" value="${escapeHtml(i.time||'')}"></div>
   `;
 }
 
@@ -1125,7 +1163,7 @@ function saveClient() {
     annualCur: document.getElementById('f-annualCur').value.trim() || '0',
     annualTarget: document.getElementById('f-annualTarget').value.trim() || '0',
     nextAction: document.getElementById('f-nextAction').value.trim(),
-    deadline: document.getElementById('f-deadline').value.trim(),
+    deadline: (() => { const v=document.getElementById('f-deadline').value.trim(); const r=document.getElementById('f-deadline-raw')?document.getElementById('f-deadline-raw').value:''; return v!==''?v:(isValidDT(r)?'':r); })(),
     risks: document.getElementById('f-risks').value.trim(),
   };
   if (editingId !== null) {
@@ -1155,7 +1193,7 @@ function saveTask() {
   const data = {
     text,
     client: document.getElementById('f-client').value,
-    deadline: document.getElementById('f-deadline').value.trim(),
+    deadline: (() => { const v=document.getElementById('f-deadline').value.trim(); const r=document.getElementById('f-deadline-raw')?document.getElementById('f-deadline-raw').value:''; return v!==''?v:(isValidDT(r)?'':r); })(),
     priority: getSegRaw('f-priority'),
     section: getSegRaw('f-section') || '今日待办',
   };
@@ -1181,7 +1219,7 @@ function saveIntel() {
     client: document.getElementById('f-client').value,
     impact: getSegRaw('f-impact') || 'mid',
     content,
-    time: document.getElementById('f-time').value.trim() || '刚刚',
+    time: (() => { const v=document.getElementById('f-time').value.trim(); const r=document.getElementById('f-time-raw')?document.getElementById('f-time-raw').value:''; return v!==''?v:(isValidDate(r)?'':r); })() || '刚刚',
   };
   if (editingId !== null) {
     const idx = intel.findIndex(i => i.id === editingId);
