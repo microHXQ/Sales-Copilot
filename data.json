@@ -1,0 +1,327 @@
+{
+  "_version": 1,
+  "clients": [
+    {
+      "id": 1,
+      "name": "华为技术有限公司",
+      "short": "华为",
+      "type": "终端",
+      "level": "战略",
+      "stage": "合同流程中",
+      "health": "green",
+      "contacts": [
+        "李明 (采购VP)"
+      ],
+      "annualCur": "2800",
+      "annualTarget": "3500",
+      "nextAction": "推进框架合同签署",
+      "deadline": "今天 18:00",
+      "risks": "竞品介入"
+    },
+    {
+      "id": 2,
+      "name": "宁德时代新能源科技",
+      "short": "宁德时代",
+      "type": "生产商",
+      "level": "战略",
+      "stage": "金额谈判中",
+      "health": "yellow",
+      "contacts": [
+        "张华 (供应链总监)"
+      ],
+      "annualCur": "1900",
+      "annualTarget": "2500",
+      "nextAction": "确认Q3交付排期",
+      "deadline": "明天",
+      "risks": "预算削减,关键人离职"
+    },
+    {
+      "id": 3,
+      "name": "比亚迪股份有限公司",
+      "short": "比亚迪",
+      "type": "生产商",
+      "level": "大型",
+      "stage": "商机验证中",
+      "health": "green",
+      "contacts": [
+        "王强 (技术总监)"
+      ],
+      "annualCur": "1200",
+      "annualTarget": "1800",
+      "nextAction": "安排技术方案评审会",
+      "deadline": "本周五",
+      "risks": ""
+    },
+    {
+      "id": 4,
+      "name": "小米通讯技术",
+      "short": "小米",
+      "type": "终端",
+      "level": "大型",
+      "stage": "付款流程中",
+      "health": "green",
+      "contacts": [
+        "陈丽 (财务经理)"
+      ],
+      "annualCur": "960",
+      "annualTarget": "1200",
+      "nextAction": "跟进尾款到账",
+      "deadline": "7月30日",
+      "risks": ""
+    },
+    {
+      "id": 5,
+      "name": "中兴通讯股份",
+      "short": "中兴",
+      "type": "终端",
+      "level": "中小",
+      "stage": "商机验证中",
+      "health": "red",
+      "contacts": [
+        "刘洋 (采购经理)"
+      ],
+      "annualCur": "320",
+      "annualTarget": "500",
+      "nextAction": "危机客户挽回沟通",
+      "deadline": "紧急",
+      "risks": "重大投诉,竞品介入,关键人离职"
+    },
+    {
+      "id": 6,
+      "name": "OPPO广东移动通信",
+      "short": "OPPO",
+      "type": "终端",
+      "level": "掉定",
+      "stage": "商机验证中",
+      "health": "red",
+      "contacts": [
+        "赵敏 (供应链主管)"
+      ],
+      "annualCur": "0",
+      "annualTarget": "800",
+      "nextAction": "重新建立联系，评估续约可能",
+      "deadline": "本周内",
+      "risks": "预算削减,竞品介入"
+    }
+  ],
+  "tasks": [
+    {
+      "id": 1,
+      "text": "华为框架合同签署跟进",
+      "client": "华为",
+      "deadline": "今天 18:00",
+      "priority": "high",
+      "section": "今日待办",
+      "done": false
+    },
+    {
+      "id": 2,
+      "text": "中兴危机客户挽回电话沟通",
+      "client": "中兴",
+      "deadline": "紧急",
+      "priority": "high",
+      "section": "今日待办",
+      "done": false
+    },
+    {
+      "id": 3,
+      "text": "宁德时代Q3交付排期确认",
+      "client": "宁德时代",
+      "deadline": "今天",
+      "priority": "high",
+      "section": "今日待办",
+      "done": false
+    },
+    {
+      "id": 4,
+      "text": "联想最终报价方案整理",
+      "client": "联想",
+      "deadline": "今天 17:00",
+      "priority": "mid",
+      "section": "今日待办",
+      "done": false
+    },
+    {
+      "id": 5,
+      "text": "小米尾款到账确认",
+      "client": "小米",
+      "deadline": "今天",
+      "priority": "mid",
+      "section": "今日待办",
+      "done": true
+    },
+    {
+      "id": 6,
+      "text": "周报数据整理",
+      "client": "",
+      "deadline": "今天 20:00",
+      "priority": "low",
+      "section": "今日待办",
+      "done": false
+    },
+    {
+      "id": 7,
+      "text": "比亚迪技术方案评审会",
+      "client": "比亚迪",
+      "deadline": "周五",
+      "priority": "high",
+      "section": "本周重点",
+      "done": false
+    },
+    {
+      "id": 8,
+      "text": "OPPO续约可能性评估",
+      "client": "OPPO",
+      "deadline": "本周内",
+      "priority": "high",
+      "section": "本周重点",
+      "done": false
+    },
+    {
+      "id": 9,
+      "text": "7月客户拜访12家（已完成8家）",
+      "client": "",
+      "deadline": "7月31日",
+      "priority": "mid",
+      "section": "月度目标",
+      "done": false
+    },
+    {
+      "id": 10,
+      "text": "新签合同额≥1,500万",
+      "client": "",
+      "deadline": "7月31日",
+      "priority": "high",
+      "section": "月度目标",
+      "done": false
+    },
+    {
+      "id": 11,
+      "text": "Q3新能源行业突破：宁德时代签约≥2,500万",
+      "client": "宁德时代",
+      "deadline": "Q3",
+      "priority": "high",
+      "section": "季度战役",
+      "done": false
+    },
+    {
+      "id": 12,
+      "text": "年度合同总额1.2亿（当前6,840万/57%）",
+      "client": "",
+      "deadline": "12月31日",
+      "priority": "high",
+      "section": "年度版图",
+      "done": false
+    }
+  ],
+  "intel": [
+    {
+      "id": 1,
+      "type": "news",
+      "client": "宁德时代",
+      "impact": "high",
+      "content": "宁德时代发布上半年财报，营收同比增长13.2%，宣布加大供应链数字化投入，预计Q3采购预算上调。",
+      "time": "2小时前"
+    },
+    {
+      "id": 2,
+      "type": "bid",
+      "client": "比亚迪",
+      "impact": "high",
+      "content": "比亚迪发布2026年供应链管理系统招标公告，预算1,200万，截止日期8月15日。竞品SAP已确认参与。",
+      "time": "5小时前"
+    },
+    {
+      "id": 3,
+      "type": "person",
+      "client": "华为",
+      "impact": "mid",
+      "content": "华为采购VP李明在供应链峰会发表演讲，强调\"构建韧性供应链生态\"，透露下半年将优化供应商分级体系。",
+      "time": "昨天"
+    },
+    {
+      "id": 4,
+      "type": "org",
+      "client": "中兴",
+      "impact": "high",
+      "content": "中兴通讯采购部组织架构调整，原采购经理刘洋调任，新任采购总监王磊将于8月1日到岗。决策链可能变化。",
+      "time": "昨天"
+    },
+    {
+      "id": 5,
+      "type": "news",
+      "client": "联想",
+      "impact": "mid",
+      "content": "联想集团宣布与微软深化AI PC合作，供应链端预计新增组件采购需求，可能扩大与我方合作范围。",
+      "time": "2天前"
+    }
+  ],
+  "dataRecords": [
+    {
+      "id": 1,
+      "ym": "2024-09",
+      "task": 860,
+      "done": 720
+    },
+    {
+      "id": 2,
+      "ym": "2024-10",
+      "task": 900,
+      "done": 780
+    },
+    {
+      "id": 3,
+      "ym": "2024-11",
+      "task": 980,
+      "done": 840
+    },
+    {
+      "id": 4,
+      "ym": "2024-12",
+      "task": 1200,
+      "done": 1080
+    },
+    {
+      "id": 5,
+      "ym": "2025-01",
+      "task": 980,
+      "done": 820
+    },
+    {
+      "id": 6,
+      "ym": "2025-02",
+      "task": 1020,
+      "done": 880
+    },
+    {
+      "id": 7,
+      "ym": "2025-03",
+      "task": 1100,
+      "done": 980
+    },
+    {
+      "id": 8,
+      "ym": "2025-04",
+      "task": 1150,
+      "done": 1010
+    },
+    {
+      "id": 9,
+      "ym": "2025-05",
+      "task": 1080,
+      "done": 950
+    },
+    {
+      "id": 10,
+      "ym": "2025-06",
+      "task": 1200,
+      "done": 1080
+    },
+    {
+      "id": 11,
+      "ym": "2025-07",
+      "task": 1180,
+      "done": 1040
+    }
+  ]
+}
