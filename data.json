@@ -1,5 +1,5 @@
 {
-  "_version": 1,
+  "_version": 2,
   "clients": [
     {
       "id": 1,
@@ -254,6 +254,14 @@
       "impact": "mid",
       "content": "联想集团宣布与微软深化AI PC合作，供应链端预计新增组件采购需求，可能扩大与我方合作范围。",
       "time": "2天前"
+    },
+    {
+      "type": "news",
+      "client": "联想",
+      "impact": "high",
+      "content": "联想刚宣布与某云厂商达成战略合作，Q3 预计新增服务器采购需求约 800 万。",
+      "time": "刚刚",
+      "id": 6
     }
   ],
   "dataRecords": [
