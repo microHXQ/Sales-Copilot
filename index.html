@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="客户经理中枢">
+<title>大客户经理工作中枢</title>
+<link rel="icon" href="data:,">
+<script src="chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #F2F2F7; --bg2: #FFFFFF; --bg3: #F2F2F7;
+  --card: #FFFFFF; --card2: #F9F9FB;
+  --separator: #C6C6C8; --separator2: #E5E5EA;
+  --text: #000000; --text2: #3C3C43; --text3: #8E8E93; --text4: #AEAEB2;
+  --accent: #007AFF; --accent-bg: rgba(0,122,255,0.1);
+  --green: #34C759; --green-bg: rgba(52,199,89,0.12);
+  --yellow: #FF9500; --yellow-bg: rgba(255,149,0,0.12);
+  --red: #FF3B30; --red-bg: rgba(255,59,48,0.10);
+  --purple: #AF52DE; --purple-bg: rgba(175,82,222,0.10);
+  --tab-bg: rgba(242,242,247,0.8); --blur-bg: rgba(255,255,255,0.72);
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.04);
+  --radius: 12px; --radius-lg: 16px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000; --bg2: #1C1C1E; --bg3: #2C2C2E;
+    --card: #1C1C1E; --card2: #2C2C2E;
+    --separator: #38383A; --separator2: #38383A;
+    --text: #FFFFFF; --text2: #EBEBF5; --text3: #98989F; --text4: #636366;
+    --accent: #0A84FF; --accent-bg: rgba(10,132,255,0.15);
+    --green: #30D158; --green-bg: rgba(48,209,88,0.15);
+    --yellow: #FF9F0A; --yellow-bg: rgba(255,159,10,0.15);
+    --red: #FF453A; --red-bg: rgba(255,69,58,0.15);
+    --purple: #BF5AF2; --purple-bg: rgba(191,90,242,0.15);
+    --tab-bg: rgba(28,28,30,0.8); --blur-bg: rgba(28,28,30,0.72);
+    --shadow: none;
+  }
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body {
+  font-family: -apple-system, 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', sans-serif;
+  background: var(--bg); color: var(--text);
+  height: 100vh; height: 100dvh; height: var(--real-vh, 100dvh); overflow: hidden;
+  -webkit-font-smoothing: antialiased; font-size: 15px; line-height: 1.4;
+}
+.app-wrap {
+  width: 100%; max-width: 430px; height: 100vh; height: 100dvh; height: var(--real-vh, 100dvh); margin: 0 auto;
+  background: var(--bg); position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+@media (min-width: 500px) {
+  body { background: #1a1a1a; display:flex; align-items:center; justify-content:center; }
+  .app-wrap {
+    height: min(932px, 100dvh); border-radius: 55px;
+    border: 3px solid #2a2a2a; box-shadow: 0 0 60px rgba(0,0,0,0.5);
+  }
+}
+.dynamic-island {
+  position: absolute; top: max(11px, var(--safe-top)); left: 50%;
+  transform: translateX(-50%); width: 126px; height: 37px;
+  background: #000; border-radius: 20px; z-index: 1000; pointer-events: none;
+}
+.status-bar-space { height: max(54px, calc(var(--safe-top) + 54px)); flex-shrink: 0; }
+
+/* Tab Nav */
+.tab-nav {
+  display: flex; background: var(--tab-bg); backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--separator2);
+  padding: 6px 8px; gap: 4px; flex-shrink: 0; position: relative; z-index: 10;
+}
+.tab-item {
+  flex: 1; text-align: center; padding: 8px 4px; font-size: 14px;
+  font-weight: 600; color: var(--text3); cursor: pointer; border-radius: 10px;
+  transition: all 0.2s; user-select: none; white-space: nowrap;
+}
+.tab-item.active { color: var(--accent); background: var(--accent-bg); }
+
+.content-wrapper { flex: 1; overflow: hidden; position: relative; }
+.pages-container {
+  display: flex; width: 400%; height: 100%;
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform;
+}
+.page {
+  width: 25%; height: 100%; overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; padding: 12px 16px;
+  padding-bottom: calc(100px + var(--safe-bottom));
+}
+.page::-webkit-scrollbar { display: none; }
+
+.section-header { font-size: 22px; font-weight: 700; padding: 8px 0 12px; letter-spacing: -0.3px; }
+.section-sub { font-size: 13px; color: var(--text3); margin-bottom: 12px; }
+
+.search-bar {
+  background: var(--bg3); border-radius: 10px; padding: 8px 12px;
+  display: flex; align-items: center; gap: 6px; margin-bottom: 12px;
+}
+.search-bar svg { width:16px; height:16px; color: var(--text3); flex-shrink:0; }
+.search-bar input { border: none; background: transparent; font-size: 15px; color: var(--text); outline: none; width: 100%; font-family: inherit; }
+
+.chip-row { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+.chip-row::-webkit-scrollbar { display: none; }
+.chip { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; background: var(--card2); color: var(--text2); white-space: nowrap; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; }
+.chip.active { background: var(--accent); color: #fff; }
+
+/* Client Card */
+.client-card { background: var(--card); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow); cursor: pointer; transition: transform 0.15s, opacity 0.15s; border: 0.5px solid var(--separator2); }
+.client-card:active { transform: scale(0.97); opacity: 0.85; }
+.client-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.health-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.client-name { font-size: 16px; font-weight: 600; flex: 1; }
+.level-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+.level-strategy { background: var(--purple-bg); color: var(--purple); }
+.level-large { background: var(--accent-bg); color: var(--accent); }
+.level-medium { background: var(--green-bg); color: var(--green); }
+.level-drop { background: var(--red-bg); color: var(--red); }
+.client-card-body { display: flex; flex-direction: column; gap: 6px; }
+.client-row { display: flex; align-items: center; gap: 6px; font-size: 13.5px; }
+.client-row .label { color: var(--text3); min-width: 64px; flex-shrink: 0; }
+.client-row .value { color: var(--text2); flex: 1; }
+.stage-tag { font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 6px; background: var(--card2); color: var(--text2); }
+.risk-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.risk-tag { font-size: 11px; padding: 3px 8px; border-radius: 6px; background: var(--red-bg); color: var(--red); font-weight: 500; }
+.next-action { background: var(--accent-bg); border-radius: 8px; padding: 8px 10px; margin-top: 8px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.next-action .deadline { margin-left: auto; font-size: 12px; color: var(--red); font-weight: 600; }
+
+/* Task Board */
+.task-section { margin-bottom: 16px; }
+.task-section-head { display: flex; align-items: center; gap: 8px; padding: 10px 4px 8px; cursor: pointer; }
+.task-section-head .toggle { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; transition: transform 0.25s; color: var(--text3); font-size: 14px; }
+.task-section.collapsed .toggle { transform: rotate(-90deg); }
+.task-section-title { font-size: 16px; font-weight: 600; flex: 1; }
+.task-section-count { font-size: 13px; color: var(--text3); background: var(--card2); padding: 2px 10px; border-radius: 12px; }
+.task-section-body { overflow: hidden; transition: max-height 0.3s ease, opacity 0.2s; max-height: 5000px; }
+.task-section.collapsed .task-section-body { max-height: 0; opacity: 0; }
+.task-item { background: var(--card); border-radius: var(--radius); padding: 14px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 12px; box-shadow: var(--shadow); border: 0.5px solid var(--separator2); cursor: pointer; transition: transform 0.15s; }
+.task-item:active { transform: scale(0.97); }
+.task-checkbox { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--text4); flex-shrink: 0; margin-top: 1px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; position: relative; }
+.task-checkbox.checked { background: var(--green); border-color: var(--green); }
+.task-checkbox.checked::after { content: '✓'; color: #fff; font-size: 13px; font-weight: bold; }
+.task-content { flex: 1; min-width: 0; }
+.task-title { font-size: 15px; font-weight: 500; margin-bottom: 4px; word-break: break-word; }
+.task-item.done .task-title { text-decoration: line-through; color: var(--text3); }
+.task-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.task-client-tag { font-size: 12px; color: var(--accent); background: var(--accent-bg); padding: 2px 8px; border-radius: 6px; }
+.task-deadline { font-size: 12px; color: var(--red); font-weight: 500; }
+.priority-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+/* Dashboard */
+.period-switch { display: flex; background: var(--card2); border-radius: 9px; padding: 2px; margin-bottom: 16px; }
+.period-btn { flex: 1; text-align: center; padding: 7px; font-size: 13px; font-weight: 600; color: var(--text3); border-radius: 7px; cursor: pointer; transition: all 0.2s; }
+.period-btn.active { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+@media (prefers-color-scheme: dark) { .period-btn.active { background: var(--bg3); } }
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.metric-card { background: var(--card); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); border: 0.5px solid var(--separator2); cursor: pointer; }
+.metric-label { font-size: 12px; color: var(--text3); margin-bottom: 6px; }
+.metric-value { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+.metric-unit { font-size: 14px; font-weight: 400; color: var(--text3); margin-left: 2px; }
+.chart-card { background: var(--card); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow); border: 0.5px solid var(--separator2); }
+.chart-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+.compact-bar-wrap { height: 150px; }
+#chart-compact { width: 100% !important; height: 100% !important; }
+.trend-wrap { position: relative; height: 180px; }
+#chart-trend { width: 100% !important; height: 100% !important; display: block; }
+/* iOS Safari：让 canvas 只接管横向手势，竖向滑动交还给页面滚动 */
+.chart-card canvas { touch-action: pan-y; }
+.compact-stats { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; }
+.cs { display: flex; align-items: baseline; gap: 4px; font-size: 12px; }
+.cs-l { color: var(--text3); }
+.cs-v { font-weight: 700; font-size: 14px; }
+
+/* Intel */
+.intel-card { background: var(--card); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 10px; box-shadow: var(--shadow); border: 0.5px solid var(--separator2); cursor: pointer; transition: transform 0.15s; border-left: 3px solid transparent; }
+.intel-card:active { transform: scale(0.97); }
+.intel-card.impact-high { border-left-color: var(--red); }
+.intel-card.impact-mid { border-left-color: var(--yellow); }
+.intel-card.impact-low { border-left-color: var(--green); }
+.intel-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.intel-type { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; }
+.intel-news { background: var(--accent-bg); color: var(--accent); }
+.intel-bid { background: var(--purple-bg); color: var(--purple); }
+.intel-person { background: var(--green-bg); color: var(--green); }
+.intel-org { background: var(--yellow-bg); color: var(--yellow); }
+.impact-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; margin-left: auto; }
+.impact-high-badge { background: var(--red-bg); color: var(--red); }
+.impact-mid-badge { background: var(--yellow-bg); color: var(--yellow); }
+.impact-low-badge { background: var(--green-bg); color: var(--green); }
+.intel-client { font-size: 12px; color: var(--text3); margin-bottom: 6px; }
+.intel-content { font-size: 14px; color: var(--text2); line-height: 1.45; }
+.intel-time { font-size: 12px; color: var(--text4); margin-top: 8px; }
+
+/* Bottom Bar */
+.bottom-bar { position: absolute; bottom: 0; left: 0; right: 0; background: var(--blur-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 0.5px solid var(--separator2); display: flex; padding: 6px 0 calc(6px + var(--safe-bottom)); z-index: 100; }
+.bottom-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px; cursor: pointer; transition: opacity 0.15s; }
+.bottom-tab:active { opacity: 0.6; }
+.bottom-tab svg { width: 26px; height: 26px; }
+.bottom-tab span { font-size: 10px; font-weight: 500; }
+.bottom-tab.active svg { color: var(--accent); }
+.bottom-tab.active span { color: var(--accent); }
+.bottom-tab:not(.active) svg { color: var(--text3); }
+.bottom-tab:not(.active) span { color: var(--text3); }
+
+/* FAB */
+.fab { position: absolute; right: 20px; bottom: calc(90px + var(--safe-bottom)); width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 4px 16px rgba(0,122,255,0.4); cursor: pointer; z-index: 50; transition: transform 0.15s; border: none; }
+.fab:active { transform: scale(0.9); }
+
+/* ===== Form Sheet (iOS Modal) ===== */
+.sheet-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 9000; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+.sheet-overlay.show { opacity: 1; pointer-events: auto; }
+.sheet { position: fixed; left: 50%; bottom: 0; transform: translateX(-50%) translateY(100%); width: 100%; max-width: 430px; max-height: 85vh; background: var(--bg3); border-radius: 16px 16px 0 0; z-index: 9001; transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); overflow: hidden; display: flex; flex-direction: column; }
+.sheet.show { transform: translateX(-50%) translateY(0); }
+.sheet-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 0.5px solid var(--separator2); background: var(--bg2); flex-shrink: 0; }
+.sheet-title { font-size: 17px; font-weight: 600; }
+.sheet-btn { font-size: 16px; border: none; background: transparent; color: var(--accent); font-family: inherit; cursor: pointer; padding: 4px 8px; }
+.sheet-btn.delete { color: var(--red); }
+.sheet-body { overflow-y: auto; padding: 12px 16px calc(20px + var(--safe-bottom)); -webkit-overflow-scrolling: touch; }
+.sheet-body::-webkit-scrollbar { display: none; }
+
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 13px; font-weight: 600; color: var(--text3); margin-bottom: 6px; display: block; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; background: var(--card); border: 0.5px solid var(--separator2);
+  border-radius: 10px; padding: 12px 14px; font-size: 15px; color: var(--text);
+  font-family: inherit; outline: none; transition: border-color 0.2s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+.form-textarea { resize: none; min-height: 72px; line-height: 1.5; }
+.form-row { display: flex; gap: 10px; }
+.form-row .form-group { flex: 1; }
+.seg-control { display: flex; background: var(--card2); border-radius: 9px; padding: 2px; gap: 2px; }
+.seg-btn { flex: 1; text-align: center; padding: 8px 4px; font-size: 13px; font-weight: 500; color: var(--text3); border-radius: 7px; cursor: pointer; transition: all 0.15s; border: none; background: transparent; font-family: inherit; }
+.seg-btn.active { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+@media (prefers-color-scheme: dark) { .seg-btn.active { background: var(--bg3); } }
+
+.contact-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.contact-row .form-input { flex: 1; }
+.contact-row .contact-del { width: 36px; height: 44px; border-radius: 10px; border: 0.5px solid var(--separator2); background: var(--card); color: var(--red); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.add-contact-btn { display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; border-radius: 10px; border: 0.5px solid var(--accent); background: var(--accent-bg); color: var(--accent); font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+.notes-section { margin-top: 8px; }
+.notes-toggle { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; color: var(--text2); font-size: 14px; font-weight: 600; cursor: pointer; }
+.notes-list { display: none; }
+.notes-list.show { display: block; }
+.note-item { background: var(--card2); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+.note-time { font-size: 12px; color: var(--text4); margin-bottom: 4px; }
+.note-content { font-size: 14px; color: var(--text); line-height: 1.4; white-space: pre-wrap; }
+
+/* Dialog */
+.dialog-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.dialog-overlay.show { opacity: 1; pointer-events: auto; }
+.dialog { background: var(--card); border-radius: 14px; width: 270px; overflow: hidden; transform: scale(1.1); transition: transform 0.2s; }
+.dialog-overlay.show .dialog { transform: scale(1); }
+.dialog-title { font-size: 17px; font-weight: 600; text-align: center; padding: 16px 16px 8px; }
+.dialog-msg { font-size: 13px; text-align: center; color: var(--text3); padding: 0 16px 16px; line-height: 1.4; }
+.dialog-actions { border-top: 0.5px solid var(--separator); display: flex; }
+.dialog-btn { flex: 1; padding: 12px; text-align: center; font-size: 17px; cursor: pointer; border: none; background: transparent; color: var(--accent); font-family: inherit; transition: background 0.15s; }
+.dialog-btn:active { background: var(--bg3); }
+.dialog-btn.cancel { color: var(--text3); border-right: 0.5px solid var(--separator); }
+.dialog-btn.destructive { color: var(--red); }
+
+/* Toast */
+.toast { position: fixed; bottom: calc(120px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--blur-bg); backdrop-filter: blur(20px); color: var(--text); padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 500; z-index: 9998; opacity: 0; pointer-events: none; transition: all 0.25s; border: 0.5px solid var(--separator2); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Empty */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text4); }
+.empty-state .emoji { font-size: 40px; margin-bottom: 10px; }
+.empty-state .text { font-size: 14px; }
+
+.home-indicator { position: absolute; bottom: max(5px, calc(var(--safe-bottom) - 2px)); left: 50%; transform: translateX(-50%); width: 134px; height: 5px; background: var(--text); border-radius: 3px; opacity: 0.2; z-index: 200; pointer-events: none; }
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; padding: 8px 6px; color: var(--text3); font-weight: 500; border-bottom: 0.5px solid var(--separator); font-size: 12px; }
+.data-table td { padding: 10px 6px; border-bottom: 0.5px solid var(--separator2); color: var(--text2); }
+.data-table td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+.add-inline { color: var(--accent); font-size: 14px; font-weight: 600; cursor: pointer; }
+.row-actions { white-space: nowrap; }
+.row-act { color: var(--accent); cursor: pointer; font-size: 12px; }
+.row-act.del { color: var(--red); margin-left: 8px; }
+.gap-negative { color: var(--red); }
+.gap-positive { color: var(--green); }
+</style>
+</head>
+<body>
+
+<noscript>
+  <div style="position:fixed; top:0; left:0; right:0; background:#ff3b30; color:#fff; padding:20px; z-index:100000; font-size:16px; text-align:center;">
+    本页面需要 JavaScript。请检查“设置 → Safari → 高级 → JavaScript”是否已开启，或关闭此域名的内容拦截扩展。
+  </div>
+</noscript>
+
+<div class="app-wrap">
+  <div class="dynamic-island"></div>
+  <div class="status-bar-space"></div>
+
+  <div class="tab-nav">
+    <div class="tab-item active" onclick="switchTab(0)">客户CRM</div>
+    <div class="tab-item" onclick="switchTab(1)">任务看板</div>
+    <div class="tab-item" onclick="switchTab(2)">数据看板</div>
+    <div class="tab-item" onclick="switchTab(3)">情报雷达</div>
+  </div>
+
+  <div class="content-wrapper">
+    <div class="pages-container" id="pages-container">
+      <!-- Page 0: CRM -->
+      <div class="page" id="page-crm">
+        <div class="section-header">客户 CRM</div>
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="搜索客户、关键人..." id="crm-search" oninput="renderClients()">
+        </div>
+        <div class="chip-row">
+          <div class="chip active" onclick="filterClients(this,'all')">全部</div>
+          <div class="chip" onclick="filterClients(this,'战略')">战略客户</div>
+          <div class="chip" onclick="filterClients(this,'大型')">大型客户</div>
+          <div class="chip" onclick="filterClients(this,'中小')">中小客户</div>
+          <div class="chip" onclick="filterClients(this,'掉定')">掉定客户</div>
+        </div>
+        <div id="client-list"></div>
+      </div>
+
+      <!-- Page 1: Tasks -->
+      <div class="page" id="page-tasks">
+        <div class="section-header">任务看板</div>
+        <div class="section-sub">按时间维度分层管理，聚焦关键推进</div>
+        <div id="task-board"></div>
+      </div>
+
+      <!-- Page 2: Data -->
+      <div class="page" id="page-data">
+        <div class="section-header">数据看板</div>
+        <div class="period-switch">
+          <div class="period-btn active" onclick="switchPeriod(this,'月度')">月度</div>
+          <div class="period-btn" onclick="switchPeriod(this,'季度')">季度</div>
+          <div class="period-btn" onclick="switchPeriod(this,'年度')">年度</div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title" id="ring-title">完成情况（当月）</div>
+          <div class="compact-bar-wrap"><canvas id="chart-compact"></canvas></div>
+          <div class="compact-stats" id="compact-stats"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title" id="trend-title">月度完成趋势</div>
+          <div class="trend-wrap"><canvas id="chart-trend"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title" style="display:flex;justify-content:space-between;align-items:center">
+            <span>历史数据明细</span>
+            <span class="add-inline" onclick="openAddRecord()">＋ 新增数据</span>
+          </div>
+          <table class="data-table" id="data-table">
+            <thead><tr><th id="th-period">月份</th><th style="text-align:right">任务</th><th style="text-align:right">完成</th><th style="text-align:right">完成率</th><th style="text-align:right">操作</th></tr></thead>
+            <tbody id="data-tbody"></tbody>
+          </table>
+        </div>
+        <div class="chart-card" style="margin-top:4px">
+          <div class="chart-title">数据备份</div>
+          <div style="display:flex;gap:10px">
+            <button class="add-contact-btn" style="flex:1;justify-content:center" onclick="exportData()">⬇ 导出备份</button>
+            <button class="add-contact-btn" style="flex:1;justify-content:center" onclick="document.getElementById('import-file').click()">⬆ 导入备份</button>
+          </div>
+          <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importData(this)">
+          <div style="font-size:12px;color:var(--text3);margin-top:10px;line-height:1.5">导出会保存客户、任务、情报、数据看板全部内容为一份文件。换手机/电脑时用「导入备份」恢复，数据不丢失。</div>
+        </div>
+      </div>
+
+      <!-- Page 3: Intel -->
+      <div class="page" id="page-intel">
+        <div class="section-header">情报雷达</div>
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="搜索情报..." id="intel-search" oninput="renderIntel()">
+        </div>
+        <div class="chip-row">
+          <div class="chip active" onclick="filterIntel(this,'all')">全部</div>
+          <div class="chip" onclick="filterIntel(this,'news')">客户新闻</div>
+          <div class="chip" onclick="filterIntel(this,'bid')">招投标</div>
+          <div class="chip" onclick="filterIntel(this,'person')">关键人动态</div>
+          <div class="chip" onclick="filterIntel(this,'org')">组织架构</div>
+        </div>
+        <div id="intel-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="fab" onclick="openCreateSheet()">＋</button>
+
+  <div class="bottom-bar">
+    <div class="bottom-tab active" onclick="switchTab(0)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>客户</span>
+    </div>
+    <div class="bottom-tab" onclick="switchTab(1)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M9 4v18"/></svg>
+      <span>任务</span>
+    </div>
+    <div class="bottom-tab" onclick="switchTab(2)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+      <span>数据</span>
+    </div>
+    <div class="bottom-tab" onclick="switchTab(3)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
+      <span>情报</span>
+    </div>
+  </div>
+  <div class="home-indicator"></div>
+</div>
+
+<!-- Form Sheet -->
+<div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-header">
+    <button class="sheet-btn" onclick="closeSheet()">取消</button>
+    <div class="sheet-title" id="sheet-title">新建</div>
+    <button class="sheet-btn" id="sheet-save-btn" onclick="saveSheet()">保存</button>
+  </div>
+  <div class="sheet-body" id="sheet-body"></div>
+</div>
+
+<!-- Dialog -->
+<div class="dialog-overlay" id="dialog-overlay">
+  <div class="dialog">
+    <div class="dialog-title" id="dialog-title">提示</div>
+    <div class="dialog-msg" id="dialog-msg"></div>
+    <div class="dialog-actions" id="dialog-actions"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== Data Layer (localStorage) =====
+const DB = {
+  load(key, fallback) {
+    try { const v = localStorage.getItem('kam_'+key); return v ? JSON.parse(v) : fallback; }
+    catch(e) { return fallback; }
+  },
+  save(key, val) { try { localStorage.setItem('kam_'+key, JSON.stringify(val)); } catch(e) {} }
+};
+
+// Seed data
+const seedClients = [
+  { id: 1, name:'华为技术有限公司', short:'华为', type:'终端', level:'战略', stage:'合同流程中', health:'green', contacts:['李明 (采购VP)'], annualCur:'2800', annualTarget:'3500', nextAction:'推进框架合同签署', deadline:'今天 18:00', risks:'竞品介入' },
+  { id: 2, name:'宁德时代新能源科技', short:'宁德时代', type:'生产商', level:'战略', stage:'金额谈判中', health:'yellow', contacts:['张华 (供应链总监)'], annualCur:'1900', annualTarget:'2500', nextAction:'确认Q3交付排期', deadline:'明天', risks:'预算削减,关键人离职' },
+  { id: 3, name:'比亚迪股份有限公司', short:'比亚迪', type:'生产商', level:'大型', stage:'商机验证中', health:'green', contacts:['王强 (技术总监)'], annualCur:'1200', annualTarget:'1800', nextAction:'安排技术方案评审会', deadline:'本周五', risks:'' },
+  { id: 4, name:'小米通讯技术', short:'小米', type:'终端', level:'大型', stage:'付款流程中', health:'green', contacts:['陈丽 (财务经理)'], annualCur:'960', annualTarget:'1200', nextAction:'跟进尾款到账', deadline:'7月30日', risks:'' },
+  { id: 5, name:'中兴通讯股份', short:'中兴', type:'终端', level:'中小', stage:'商机验证中', health:'red', contacts:['刘洋 (采购经理)'], annualCur:'320', annualTarget:'500', nextAction:'危机客户挽回沟通', deadline:'紧急', risks:'重大投诉,竞品介入,关键人离职' },
+  { id: 6, name:'OPPO广东移动通信', short:'OPPO', type:'终端', level:'掉定', stage:'商机验证中', health:'red', contacts:['赵敏 (供应链主管)'], annualCur:'0', annualTarget:'800', nextAction:'重新建立联系，评估续约可能', deadline:'本周内', risks:'预算削减,竞品介入' },
+];
+
+const seedTasks = [
+  { id:1, text:'华为框架合同签署跟进', client:'华为', deadline:'今天 18:00', priority:'high', section:'今日待办', done:false },
+  { id:2, text:'中兴危机客户挽回电话沟通', client:'中兴', deadline:'紧急', priority:'high', section:'今日待办', done:false },
+  { id:3, text:'宁德时代Q3交付排期确认', client:'宁德时代', deadline:'今天', priority:'high', section:'今日待办', done:false },
+  { id:4, text:'联想最终报价方案整理', client:'联想', deadline:'今天 17:00', priority:'mid', section:'今日待办', done:false },
+  { id:5, text:'小米尾款到账确认', client:'小米', deadline:'今天', priority:'mid', section:'今日待办', done:true },
+  { id:6, text:'周报数据整理', client:'', deadline:'今天 20:00', priority:'low', section:'今日待办', done:false },
+  { id:7, text:'比亚迪技术方案评审会', client:'比亚迪', deadline:'周五', priority:'high', section:'本周重点', done:false },
+  { id:8, text:'OPPO续约可能性评估', client:'OPPO', deadline:'本周内', priority:'high', section:'本周重点', done:false },
+  { id:9, text:'7月客户拜访12家（已完成8家）', client:'', deadline:'7月31日', priority:'mid', section:'月度目标', done:false },
+  { id:10, text:'新签合同额≥1,500万', client:'', deadline:'7月31日', priority:'high', section:'月度目标', done:false },
+  { id:11, text:'Q3新能源行业突破：宁德时代签约≥2,500万', client:'宁德时代', deadline:'Q3', priority:'high', section:'季度战役', done:false },
+  { id:12, text:'年度合同总额1.2亿（当前6,840万/57%）', client:'', deadline:'12月31日', priority:'high', section:'年度版图', done:false },
+];
+
+const seedIntel = [
+  { id:1, type:'news', client:'宁德时代', impact:'high', content:'宁德时代发布上半年财报，营收同比增长13.2%，宣布加大供应链数字化投入，预计Q3采购预算上调。', time:'2小时前' },
+  { id:2, type:'bid', client:'比亚迪', impact:'high', content:'比亚迪发布2026年供应链管理系统招标公告，预算1,200万，截止日期8月15日。竞品SAP已确认参与。', time:'5小时前' },
+  { id:3, type:'person', client:'华为', impact:'mid', content:'华为采购VP李明在供应链峰会发表演讲，强调"构建韧性供应链生态"，透露下半年将优化供应商分级体系。', time:'昨天' },
+  { id:4, type:'org', client:'中兴', impact:'high', content:'中兴通讯采购部组织架构调整，原采购经理刘洋调任，新任采购总监王磊将于8月1日到岗。决策链可能变化。', time:'昨天' },
+  { id:5, type:'news', client:'联想', impact:'mid', content:'联想集团宣布与微软深化AI PC合作，供应链端预计新增组件采购需求，可能扩大与我方合作范围。', time:'2天前' },
+];
+
+const seedRecords = [
+  { id: 1, ym:'2024-09', task:860, done:720 },
+  { id: 2, ym:'2024-10', task:900, done:780 },
+  { id: 3, ym:'2024-11', task:980, done:840 },
+  { id: 4, ym:'2024-12', task:1200, done:1080 },
+  { id: 5, ym:'2025-01', task:980, done:820 },
+  { id: 6, ym:'2025-02', task:1020, done:880 },
+  { id: 7, ym:'2025-03', task:1100, done:980 },
+  { id: 8, ym:'2025-04', task:1150, done:1010 },
+  { id: 9, ym:'2025-05', task:1080, done:950 },
+  { id: 10, ym:'2025-06', task:1200, done:1080 },
+  { id: 11, ym:'2025-07', task:1180, done:1040 },
+];
+
+// Load or init
+let clients = DB.load('clients', seedClients).map(c => {
+  if (c.contact && !c.contacts) c.contacts = [c.contact];
+  if (!c.contacts) c.contacts = [];
+  if (!c.notes) c.notes = [];
+  return c;
+});
+let tasks = DB.load('tasks', seedTasks);
+let intel = DB.load('intel', seedIntel);
+let dataRecords = DB.load('dataRecords', seedRecords);
+let currentTab = 0;
+let currentFilter = 'all';
+let currentIntelFilter = 'all';
+let currentPeriod = '月度';
+let editingType = null; // 'client' | 'task' | 'intel'
+let editingId = null;   // null = new, number = edit
+
+// ===== Tab Navigation =====
+function switchTab(idx) {
+  currentTab = idx;
+  document.querySelectorAll('.tab-item').forEach((t,i) => t.classList.toggle('active', i===idx));
+  document.querySelectorAll('.bottom-tab').forEach((t,i) => t.classList.toggle('active', i===idx));
+  document.getElementById('pages-container').style.transform = `translateX(-${idx*25}%)`;
+  if (idx === 2) setTimeout(initCharts, 100);
+}
+
+// Touch swipe
+let touchStartX=0, touchStartY=0, isSwiping=false;
+const cw = document.querySelector('.content-wrapper');
+cw.addEventListener('touchstart', e => { touchStartX=e.touches[0].clientX; touchStartY=e.touches[0].clientY; isSwiping=false; });
+cw.addEventListener('touchmove', e => { const dx=e.touches[0].clientX-touchStartX, dy=e.touches[0].clientY-touchStartY; if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>20) isSwiping=true; });
+cw.addEventListener('touchend', e => { if(!isSwiping) return; const dx=e.changedTouches[0].clientX-touchStartX; if(dx<-50&&currentTab<3) switchTab(currentTab+1); else if(dx>50&&currentTab>0) switchTab(currentTab-1); });
+
+// ===== Render Clients =====
+function renderClients() {
+  const list = document.getElementById('client-list');
+  const search = (document.getElementById('crm-search').value || '').toLowerCase();
+  let filtered = clients;
+  if (currentFilter !== 'all') filtered = filtered.filter(c => c.level === currentFilter);
+  if (search) filtered = filtered.filter(c => c.name.toLowerCase().includes(search) || (c.short||'').toLowerCase().includes(search) || (c.contacts||[]).some(ct => ct.toLowerCase().includes(search)));
+  if (!filtered.length) { list.innerHTML = '<div class="empty-state"><div class="emoji">📋</div><div class="text">暂无客户，点击右下角＋添加</div></div>'; return; }
+  const levelClass = { '战略':'level-strategy','大型':'level-large','中小':'level-medium','掉定':'level-drop' };
+  const healthColor = { green:'var(--green)', yellow:'var(--yellow)', red:'var(--red)' };
+  list.innerHTML = filtered.map(c => {
+    const contactLabel = (c.contacts && c.contacts.length) ? (c.contacts[0] + (c.contacts.length > 1 ? ` 等${c.contacts.length}人` : '')) : '-';
+    return `
+    <div class="client-card" onclick="openEditClient(${c.id})">
+      <div class="client-card-head">
+        <div class="health-dot" style="background:${healthColor[c.health]}"></div>
+        <div class="client-name">${c.name}</div>
+        <span class="level-badge ${levelClass[c.level]||''}">${c.level}</span>
+      </div>
+      <div class="client-card-body">
+        <div class="client-row"><span class="label">客户类型</span><span class="value">${c.type||'-'}</span></div>
+        <div class="client-row"><span class="label">合作阶段</span><span class="stage-tag">${c.stage||'-'}</span></div>
+        <div class="client-row"><span class="label">关键决策人</span><span class="value">${contactLabel}</span></div>
+        <div class="client-row"><span class="label">年度合同额</span><span class="value">${c.annualCur||'0'}万 / 目标${c.annualTarget||'0'}万</span></div>
+        ${c.risks ? `<div class="risk-tags">${c.risks.split(',').map(r=>`<span class="risk-tag">⚠ ${r.trim()}</span>`).join('')}</div>` : ''}
+        <div class="next-action"><span>📍 ${c.nextAction||'-'}</span><span class="deadline">${c.deadline||''}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterClients(el, filter) {
+  el.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = filter;
+  renderClients();
+}
+
+// ===== Render Tasks =====
+function renderTasks() {
+  const board = document.getElementById('task-board');
+  const sections = ['今日待办','本周重点','月度目标','季度战役','年度版图'];
+  const pMap = { high:'var(--red)', mid:'var(--yellow)', low:'var(--green)' };
+  board.innerHTML = sections.map((title,si) => {
+    const items = tasks.filter(t => t.section === title);
+    const undone = items.filter(t => !t.done).length;
+    return `
+      <div class="task-section collapsed" id="ts-${si}">
+        <div class="task-section-head" onclick="document.getElementById('ts-${si}').classList.toggle('collapsed')">
+          <span class="toggle">▾</span>
+          <span class="task-section-title">${title}</span>
+          <span class="task-section-count">${undone}/${items.length}</span>
+        </div>
+        <div class="task-section-body">
+          ${items.length ? items.map(t => `
+            <div class="task-item ${t.done?'done':''}" onclick="event.stopPropagation(); openEditTask(${t.id})">
+              <div class="task-checkbox ${t.done?'checked':''}" onclick="event.stopPropagation(); toggleTask(${t.id})"></div>
+              <div class="task-content">
+                <div class="task-title">${t.text}</div>
+                <div class="task-meta">
+                  ${t.client ? `<span class="task-client-tag">${t.client}</span>` : ''}
+                  <span class="priority-dot" style="background:${pMap[t.priority]||'var(--text4)'}"></span>
+                  ${t.deadline ? `<span class="task-deadline">⏰ ${t.deadline}</span>` : ''}
+                </div>
+              </div>
+            </div>
+          `).join('') : '<div class="empty-state" style="padding:20px"><div class="text" style="font-size:13px;color:var(--text4)">暂无任务</div></div>'}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleTask(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  DB.save('tasks', tasks);
+  renderTasks();
+  showToast(t.done ? '已完成 ✓' : '已标记为待办');
+}
+
+// ===== Render Intel =====
+function renderIntel() {
+  const list = document.getElementById('intel-list');
+  const search = (document.getElementById('intel-search').value || '').toLowerCase();
+  let filtered = intel;
+  if (currentIntelFilter !== 'all') filtered = filtered.filter(i => i.type === currentIntelFilter);
+  if (search) filtered = filtered.filter(i => i.content.toLowerCase().includes(search) || (i.client||'').toLowerCase().includes(search));
+  if (!filtered.length) { list.innerHTML = '<div class="empty-state"><div class="emoji">📡</div><div class="text">暂无情报，点击右下角＋添加</div></div>'; return; }
+  const typeLabel = { news:'客户新闻', bid:'招投标', person:'关键人动态', org:'组织架构' };
+  const typeClass = { news:'intel-news', bid:'intel-bid', person:'intel-person', org:'intel-org' };
+  const impactClass = { high:'impact-high', mid:'impact-mid', low:'impact-low' };
+  const impactBadge = { high:'impact-high-badge', mid:'impact-mid-badge', low:'impact-low-badge' };
+  const impactLabel = { high:'高', mid:'中', low:'低' };
+  list.innerHTML = filtered.map(i => `
+    <div class="intel-card ${impactClass[i.impact]}" onclick="openEditIntel(${i.id})">
+      <div class="intel-head">
+        <span class="intel-type ${typeClass[i.type]}">${typeLabel[i.type]||i.type}</span>
+        <span class="impact-badge ${impactBadge[i.impact]}">${impactLabel[i.impact]||i.impact}</span>
+      </div>
+      <div class="intel-client">📌 ${i.client||'-'}</div>
+      <div class="intel-content">${i.content}</div>
+      <div class="intel-time">${i.time||''}</div>
+    </div>
+  `).join('');
+}
+
+function filterIntel(el, filter) {
+  el.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentIntelFilter = filter;
+  renderIntel();
+}
+
+// ===== Data Dashboard =====
+function sortRecs() { return dataRecords.slice().sort((a,b) => a.ym < b.ym ? -1 : 1); }
+function latestRec() { const s = sortRecs(); return s.length ? s[s.length-1] : { ym:'-', task:0, done:0 }; }
+function prevRec() { const s = sortRecs(); return s.length > 1 ? s[s.length-2] : { ym:'-', task:0, done:0 }; }
+function rateOf(rec) { return rec.task > 0 ? Math.round(rec.done/rec.task*1000)/10 : 0; }
+function groupByQuarter(recs) {
+  const map = {};
+  recs.forEach(r => {
+    const parts = r.ym.split('-'); const q = Math.ceil(parseInt(parts[1],10)/3);
+    const key = parts[0] + ' Q' + q;
+    if (!map[key]) map[key] = { label:key, task:0, done:0 };
+    map[key].task += parseFloat(r.task)||0; map[key].done += parseFloat(r.done)||0;
+  });
+  return Object.keys(map).sort().map(k => map[k]);
+}
+function groupByYear(recs) {
+  const map = {};
+  recs.forEach(r => {
+    const y = r.ym.split('-')[0];
+    if (!map[y]) map[y] = { label:y, task:0, done:0 };
+    map[y].task += parseFloat(r.task)||0; map[y].done += parseFloat(r.done)||0;
+  });
+  return Object.keys(map).sort().map(k => map[k]);
+}
+function periodWord(period) { return period === '月度' ? '当月' : period === '季度' ? '当季' : '当年'; }
+function periodWordPrev(period) { return period === '月度' ? '上月' : period === '季度' ? '上季' : '上年'; }
+function aggregatePeriods(period) {
+  if (period === '季度') return groupByQuarter(sortRecs());
+  if (period === '年度') return groupByYear(sortRecs());
+  return sortRecs().map(r => ({ label: r.ym, key: r.ym, task: parseFloat(r.task)||0, done: parseFloat(r.done)||0, id: r.id }));
+}
+function calcMetrics(period) {
+  const periods = aggregatePeriods(period);
+  if (!periods.length) return null;
+  const cur = periods[periods.length-1];
+  const prev = periods.length > 1 ? periods[periods.length-2] : { task:0, done:0, label:'-' };
+  const task = parseFloat(cur.task)||0;
+  const done = parseFloat(cur.done)||0;
+  const target = Math.round(task * 1.4);
+  const gap = Math.round(task - done);
+  const taskRate = rateOf(cur);
+  const targetRate = target > 0 ? Math.round(done/target*1000)/10 : 0;
+  const prevTask = parseFloat(prev.task)||0;
+  const prevDone = parseFloat(prev.done)||0;
+  const prevTarget = Math.round(prevTask*1.4);
+  const prevTaskRate = prevTask>0 ? Math.round(prevDone/prevTask*1000)/10 : 0;
+  const prevTargetRate = prevTarget>0 ? Math.round(prevDone/prevTarget*1000)/10 : 0;
+  const prevGap = Math.round(prevTask - prevDone);
+  return { cur, prev, task, done, target, gap, taskRate, targetRate, prevTask, prevDone, prevTarget, prevTaskRate, prevTargetRate, prevGap, period, label: cur.label };
+}
+
+function renderDashboard() {
+  const period = currentPeriod;
+  const m = calcMetrics(period);
+  const pw = periodWord(period);
+  const title = document.getElementById('ring-title');
+  if (title) title.textContent = '完成情况（' + pw + '）';
+  const stats = document.getElementById('compact-stats');
+  if (!m) {
+    if (stats) stats.innerHTML = '<span style="color:var(--text3);font-size:13px">暂无数据</span>';
+    renderHistoryTable();
+    return;
+  }
+  if (stats) stats.innerHTML = `
+    <div class="cs"><span class="cs-l">任务完成率</span><span class="cs-v" style="color:${m.taskRate>=80?'var(--green)':'var(--yellow)'}">${m.taskRate}%</span></div>
+    <div class="cs"><span class="cs-l">指标完成率</span><span class="cs-v" style="color:var(--accent)">${m.targetRate}%</span></div>
+    <div class="cs"><span class="cs-l">GAP</span><span class="cs-v" style="color:${m.gap<0?'var(--red)':'var(--green)'}">${Math.abs(m.gap).toLocaleString()}万</span></div>
+  `;
+  renderHistoryTable();
+}
+
+function renderHistoryTable() {
+  const tbody = document.getElementById('data-tbody');
+  const thPeriod = document.getElementById('th-period');
+  if (thPeriod) thPeriod.textContent = currentPeriod === '月度' ? '月份' : currentPeriod === '季度' ? '季度' : '年度';
+  const rows = aggregatePeriods(currentPeriod);
+  const sorted = rows.slice().reverse();
+  if (!sorted.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text4);padding:16px">暂无数据，点击「＋ 新增数据」录入</td></tr>';
+    return;
+  }
+  if (currentPeriod === '月度') {
+    tbody.innerHTML = sorted.map(r => `
+      <tr>
+        <td>${r.label}</td>
+        <td class="num">${parseFloat(r.task||0).toLocaleString()}万</td>
+        <td class="num">${parseFloat(r.done||0).toLocaleString()}万</td>
+        <td class="num" style="color:var(--green)">${rateOf(r)}%</td>
+        <td class="num row-actions">
+          <span class="row-act" onclick="openEditRecord(${r.id})">编辑</span>
+          <span class="row-act del" onclick="deleteRecord(${r.id})">删除</span>
+        </td>
+      </tr>
+    `).join('');
+  } else {
+    tbody.innerHTML = sorted.map(r => `
+      <tr>
+        <td>${r.label}</td>
+        <td class="num">${parseFloat(r.task||0).toLocaleString()}万</td>
+        <td class="num">${parseFloat(r.done||0).toLocaleString()}万</td>
+        <td class="num" style="color:var(--green)">${rateOf(r)}%</td>
+        <td class="num row-actions"></td>
+      </tr>
+    `).join('');
+  }
+}
+
+function deleteRecord(id) {
+  confirmDelete('确认删除该月数据？', () => {
+    dataRecords = dataRecords.filter(x => x.id !== id);
+    DB.save('dataRecords', dataRecords);
+    renderDashboard();
+    refreshCharts();
+    showToast('已删除');
+  });
+}
+function refreshCharts() {
+  if (chartTrend) { chartTrend.destroy(); chartTrend = null; }
+  if (chartCompact) { chartCompact.destroy(); chartCompact = null; }
+  setTimeout(initCharts, 50);
+}
+
+function switchPeriod(el, period) {
+  el.parentElement.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentPeriod = period;
+  renderDashboard();
+  if (chartTrend) { chartTrend.destroy(); chartTrend=null; }
+  if (chartCompact) { chartCompact.destroy(); chartCompact=null; }
+  setTimeout(initCharts, 50);
+}
+
+// ===== Charts =====
+let chartTrend, chartCompact;
+function initCharts() {
+  if (chartTrend) chartTrend.destroy();
+  if (chartCompact) chartCompact.destroy();
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const textColor = isDark ? '#98989F' : '#8E8E93';
+  const gridColor = isDark ? '#38383A' : '#E5E5EA';
+  const m = calcMetrics(currentPeriod);
+
+  // 完成情况：紧凑柱状图
+  const ctxC = document.getElementById('chart-compact').getContext('2d');
+  if (chartCompact) chartCompact.destroy();
+  if (m) {
+    chartCompact = new Chart(ctxC, {
+      type: 'bar',
+      data: { labels:['任务额','完成额','指标额'], datasets:[{ data:[m.task, m.done, m.target], backgroundColor:['rgba(0,122,255,0.85)','rgba(52,199,89,0.9)','rgba(142,142,147,0.45)'], borderRadius:6, barPercentage:0.55 }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{enabled:true, callbacks:{ label:(c)=> Number(c.parsed.y).toLocaleString()+'万' } } }, scales:{ x:{ grid:{display:false}, ticks:{ font:{size:12} } }, y:{ display:false, beginAtZero:true } } },
+      plugins: [{
+        id:'val',
+        afterDatasetsDraw(chart){
+          const {ctx} = chart; const meta = chart.getDatasetMeta(0);
+          ctx.save(); ctx.font='600 11px -apple-system'; ctx.fillStyle = isDark?'#FFFFFF':'#000000'; ctx.textAlign='center';
+          meta.data.forEach((bar,idx)=>{ const v = chart.data.datasets[0].data[idx]; ctx.fillText(Number(v).toLocaleString(), bar.x, bar.y-4); });
+          ctx.restore();
+        }
+      }]
+    });
+  }
+
+  // Trend chart（按周期切换）
+  const ctxT = document.getElementById('chart-trend').getContext('2d');
+  let labels = [], taskData = [], doneData = [], datasets;
+  const yearPalette = ['#007AFF','#34C759','#FF9500','#AF52DE','#FF3B30','#5AC8FA','#FFCC00','#FF6482','#30D158','#5856D6'];
+
+  if (currentPeriod === '月度') {
+    document.getElementById('trend-title').textContent = '月度完成趋势';
+    const recs = sortRecs().slice(-12);
+    labels = recs.map(r => r.ym.slice(2));
+    taskData = recs.map(r => parseFloat(r.task)||0);
+    doneData = recs.map(r => parseFloat(r.done)||0);
+    datasets = [
+      { label:'任务金额', data:taskData, backgroundColor:'rgba(0,122,255,0.5)', borderRadius:4 },
+      { label:'完成金额', data:doneData, backgroundColor:'rgba(52,199,89,0.6)', borderRadius:4 }
+    ];
+  } else if (currentPeriod === '季度') {
+    document.getElementById('trend-title').textContent = '季度完成趋势';
+    const q = groupByQuarter(sortRecs());
+    labels = q.map(x => x.label);
+    taskData = q.map(x => x.task);
+    doneData = q.map(x => x.done);
+    datasets = [
+      { label:'任务金额', data:taskData, backgroundColor:'rgba(0,122,255,0.5)', borderRadius:4 },
+      { label:'完成金额', data:doneData, backgroundColor:'rgba(52,199,89,0.6)', borderRadius:4 }
+    ];
+  } else {
+    document.getElementById('trend-title').textContent = '各年度完成趋势';
+    const y = groupByYear(sortRecs());
+    labels = y.map(x => x.label);
+    taskData = y.map(x => x.task);
+    doneData = y.map(x => x.done);
+    const barColors = y.map((x, i) => yearPalette[i % yearPalette.length]);
+    datasets = [
+      { type:'line', label:'任务金额', data:taskData, borderColor:'#FF3B30', backgroundColor:'#FF3B30', borderWidth:2, tension:0.3, pointRadius:3, order:1 },
+      { type:'bar', label:'完成金额', data:doneData, backgroundColor:barColors, borderRadius:4, order:2 }
+    ];
+  }
+
+  chartTrend = new Chart(ctxT, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: { responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom', labels:{ color:textColor, font:{size:11}, boxWidth:12, padding:12 } } },
+      scales:{ x:{ ticks:{color:textColor,font:{size:11}}, grid:{display:false} }, y:{ ticks:{color:textColor,font:{size:11},callback:v=>v+'万'}, grid:{color:gridColor} } }
+    }
+  });
+}
+
+// ===== Form Sheet =====
+function openSheet(title, bodyHTML, isEdit) {
+  document.getElementById('sheet-title').textContent = title;
+  document.getElementById('sheet-body').innerHTML = bodyHTML;
+  const saveBtn = document.getElementById('sheet-save-btn');
+  if (isEdit) {
+    saveBtn.textContent = '保存';
+    saveBtn.style.color = 'var(--accent)';
+  } else {
+    saveBtn.textContent = '添加';
+    saveBtn.style.color = 'var(--accent)';
+  }
+  document.getElementById('sheet-overlay').classList.add('show');
+  document.getElementById('sheet').classList.add('show');
+}
+
+function closeSheet() {
+  document.getElementById('sheet-overlay').classList.remove('show');
+  document.getElementById('sheet').classList.remove('show');
+  document.querySelectorAll('.sheet-btn.delete').forEach(b => b.remove());
+  editingType = null; editingId = null;
+}
+
+function openCreateSheet() {
+  if (currentTab === 0) openNewClient();
+  else if (currentTab === 1) openNewTask();
+  else if (currentTab === 3) openNewIntel();
+  else if (currentTab === 2) openAddRecord();
+  else openNewClient();
+}
+
+// --- Client Form ---
+function openNewClient() { editingType='client'; editingId=null; openSheet('新建客户', clientFormHTML(), false); }
+function openEditClient(id) {
+  const c = clients.find(x=>x.id===id); if(!c) return;
+  editingType='client'; editingId=id;
+  openSheet('编辑客户', clientFormHTML(c), true);
+  document.getElementById('sheet-save-btn').textContent = '保存';
+  document.querySelectorAll('.sheet-btn.delete').forEach(b => b.remove());
+  const delBtn = document.createElement('button');
+  delBtn.className = 'sheet-btn delete';
+  delBtn.textContent = '删除';
+  delBtn.onclick = () => confirmDelete('确认删除该客户？', () => { clients = clients.filter(x=>x.id!==id); DB.save('clients',clients); renderClients(); closeSheet(); showToast('客户已删除'); });
+  document.querySelector('.sheet-header').insertBefore(delBtn, document.getElementById('sheet-save-btn'));
+}
+function addContactRow() {
+  const list = document.getElementById('contacts-list');
+  const row = document.createElement('div');
+  row.className = 'contact-row';
+  row.innerHTML = '<input class="form-input f-contact" placeholder="如：李明 (采购VP)" value=""><button type="button" class="contact-del" onclick="removeContactRow(this)">−</button>';
+  list.appendChild(row);
+  row.querySelector('input').focus();
+}
+function removeContactRow(btn) {
+  const rows = document.querySelectorAll('#contacts-list .contact-row');
+  if (rows.length > 1) btn.parentElement.remove();
+  else btn.previousElementSibling.value = '';
+}
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function clientFormHTML(c={}) {
+  return `
+    <div class="form-group"><label class="form-label">客户名称 *</label><input class="form-input" id="f-name" placeholder="如：华为技术有限公司" value="${c.name||''}"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">简称</label><input class="form-input" id="f-short" placeholder="如：华为" value="${c.short||''}"></div>
+      <div class="form-group"><label class="form-label">客户类型</label>
+        <select class="form-select" id="f-type">
+          <option ${c.type==='终端'?'selected':''}>终端</option><option ${c.type==='生产商'?'selected':''}>生产商</option><option ${c.type==='贸易商'?'selected':''}>贸易商</option>
+        </select></div>
+    </div>
+    <div class="form-group"><label class="form-label">客户级别</label>
+      <div class="seg-control" id="f-level">
+        ${['战略','大型','中小','掉定'].map(l=>`<button class="seg-btn ${c.level===l?'active':''}" onclick="segSelect(this)">${l}</button>`).join('')}
+      </div></div>
+    <div class="form-group"><label class="form-label">合作阶段</label>
+      <select class="form-select" id="f-stage">
+        ${['商机验证中','金额谈判中','合同流程中','付款流程中'].map(s=>`<option ${c.stage===s?'selected':''}>${s}</option>`).join('')}
+      </select></div>
+    <div class="form-group"><label class="form-label">健康度</label>
+      <div class="seg-control" id="f-health">
+        <button class="seg-btn ${c.health==='green'?'active':''}" onclick="segSelect(this)">🟢 正常</button>
+        <button class="seg-btn ${c.health==='yellow'?'active':''}" onclick="segSelect(this)">🟡 预警</button>
+        <button class="seg-btn ${c.health==='red'?'active':''}" onclick="segSelect(this)">🔴 危机</button>
+      </div></div>
+    <div class="form-group">
+      <label class="form-label">关键决策人</label>
+      <div id="contacts-list">
+        ${(c.contacts && c.contacts.length ? c.contacts : ['']).map(ct => `
+          <div class="contact-row">
+            <input class="form-input f-contact" placeholder="如：李明 (采购VP)" value="${ct}">
+            <button type="button" class="contact-del" onclick="removeContactRow(this)">−</button>
+          </div>
+        `).join('')}
+      </div>
+      <button type="button" class="add-contact-btn" onclick="addContactRow()">＋ 添加关键决策人</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">当前合同额(万)</label><input class="form-input" id="f-annualCur" type="number" placeholder="如：2800" value="${c.annualCur||''}"></div>
+      <div class="form-group"><label class="form-label">目标合同额(万)</label><input class="form-input" id="f-annualTarget" type="number" placeholder="如：3500" value="${c.annualTarget||''}"></div>
+    </div>
+    <div class="form-group"><label class="form-label">下一步行动</label><input class="form-input" id="f-nextAction" placeholder="如：推进框架合同签署" value="${c.nextAction||''}"></div>
+    <div class="form-group"><label class="form-label">Deadline</label><input class="form-input" id="f-deadline" placeholder="如：今天 18:00" value="${c.deadline||''}"></div>
+    <div class="form-group"><label class="form-label">风险标签（逗号分隔）</label><input class="form-input" id="f-risks" placeholder="如：预算削减,竞品介入" value="${c.risks||''}"></div>
+    <div class="form-group notes-section">
+      <label class="form-label">重要事项记录</label>
+      <textarea class="form-textarea" id="f-note" placeholder="输入新的重要事项，保存后自动追加到历史..." style="min-height:80px"></textarea>
+      ${(c.notes && c.notes.length) ? `
+        <div class="notes-toggle" onclick="this.nextElementSibling.classList.toggle('show'); this.querySelector('span').textContent = this.nextElementSibling.classList.contains('show') ? '收起历史' : '展开历史 (${c.notes.length})'">
+          <span>展开历史 (${c.notes.length})</span>
+          <span>▾</span>
+        </div>
+        <div class="notes-list">
+          ${c.notes.map(n => `
+            <div class="note-item">
+              <div class="note-time">${n.time || ''}</div>
+              <div class="note-content">${escapeHtml(n.content || '')}</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+// --- Task Form ---
+function openNewTask() { editingType='task'; editingId=null; openSheet('新建任务', taskFormHTML(), false); }
+function openEditTask(id) {
+  const t = tasks.find(x=>x.id===id); if(!t) return;
+  editingType='task'; editingId=id;
+  openSheet('编辑任务', taskFormHTML(t), true);
+  document.querySelectorAll('.sheet-btn.delete').forEach(b => b.remove());
+  const delBtn = document.createElement('button');
+  delBtn.className = 'sheet-btn delete'; delBtn.textContent='删除';
+  delBtn.onclick = () => confirmDelete('确认删除该任务？', () => { tasks = tasks.filter(x=>x.id!==id); DB.save('tasks',tasks); renderTasks(); closeSheet(); showToast('任务已删除'); });
+  document.querySelector('.sheet-header').insertBefore(delBtn, document.getElementById('sheet-save-btn'));
+}
+function taskFormHTML(t={}) {
+  const clientOptions = clients.map(c=>`<option ${t.client===c.short?'selected':''}>${c.short}</option>`).join('');
+  return `
+    <div class="form-group"><label class="form-label">任务内容 *</label><textarea class="form-textarea" id="f-text" placeholder="如：华为框架合同签署跟进">${t.text||''}</textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">关联客户</label>
+        <select class="form-select" id="f-client"><option value="">无</option>${clientOptions}</select></div>
+      <div class="form-group"><label class="form-label">Deadline</label><input class="form-input" id="f-deadline" placeholder="如：今天 18:00" value="${t.deadline||''}"></div>
+    </div>
+    <div class="form-group"><label class="form-label">优先级</label>
+      <div class="seg-control" id="f-priority">
+        <button class="seg-btn ${t.priority==='high'?'active':''}" onclick="segSelect(this)">🔴 高</button>
+        <button class="seg-btn ${t.priority==='mid'?'active':''}" onclick="segSelect(this)">🟡 中</button>
+        <button class="seg-btn ${t.priority==='low'?'active':''}" onclick="segSelect(this)">🟢 低</button>
+      </div></div>
+    <div class="form-group"><label class="form-label">归属层级</label>
+      <div class="seg-control" id="f-section">
+        ${['今日待办','本周重点','月度目标','季度战役','年度版图'].map(s=>`<button class="seg-btn ${(t.section||'今日待办')===s?'active':''}" onclick="segSelect(this)">${s}</button>`).join('')}
+      </div></div>
+  `;
+}
+
+// --- Intel Form ---
+function openNewIntel() { editingType='intel'; editingId=null; openSheet('添加情报', intelFormHTML(), false); }
+function openEditIntel(id) {
+  const i = intel.find(x=>x.id===id); if(!i) return;
+  editingType='intel'; editingId=id;
+  openSheet('编辑情报', intelFormHTML(i), true);
+  document.querySelectorAll('.sheet-btn.delete').forEach(b => b.remove());
+  const delBtn = document.createElement('button');
+  delBtn.className = 'sheet-btn delete'; delBtn.textContent='删除';
+  delBtn.onclick = () => confirmDelete('确认删除该情报？', () => { intel = intel.filter(x=>x.id!==id); DB.save('intel',intel); renderIntel(); closeSheet(); showToast('情报已删除'); });
+  document.querySelector('.sheet-header').insertBefore(delBtn, document.getElementById('sheet-save-btn'));
+}
+function intelFormHTML(i={}) {
+  const clientOptions = clients.map(c=>`<option ${i.client===c.short?'selected':''}>${c.short}</option>`).join('');
+  return `
+    <div class="form-group"><label class="form-label">情报类型</label>
+      <div class="seg-control" id="f-type">
+        <button class="seg-btn ${(i.type||'news')==='news'?'active':''}" onclick="segSelect(this)" data-val="news">客户新闻</button>
+        <button class="seg-btn ${i.type==='bid'?'active':''}" onclick="segSelect(this)" data-val="bid">招投标</button>
+        <button class="seg-btn ${i.type==='person'?'active':''}" onclick="segSelect(this)" data-val="person">关键人动态</button>
+        <button class="seg-btn ${i.type==='org'?'active':''}" onclick="segSelect(this)" data-val="org">组织架构</button>
+      </div></div>
+    <div class="form-group"><label class="form-label">关联客户</label>
+      <select class="form-select" id="f-client"><option value="">无</option>${clientOptions}</select></div>
+    <div class="form-group"><label class="form-label">影响等级</label>
+      <div class="seg-control" id="f-impact">
+        <button class="seg-btn ${i.impact==='high'?'active':''}" onclick="segSelect(this)" data-val="high">🔴 高</button>
+        <button class="seg-btn ${i.impact==='mid'?'active':''}" onclick="segSelect(this)" data-val="mid">🟡 中</button>
+        <button class="seg-btn ${i.impact==='low'?'active':''}" onclick="segSelect(this)" data-val="low">🟢 低</button>
+      </div></div>
+    <div class="form-group"><label class="form-label">情报内容 *</label><textarea class="form-textarea" id="f-content" placeholder="输入情报内容..." style="min-height:100px">${i.content||''}</textarea></div>
+    <div class="form-group"><label class="form-label">时间</label><input class="form-input" id="f-time" placeholder="如：2小时前" value="${i.time||''}"></div>
+  `;
+}
+
+// --- Data Edit Form ---
+function openAddRecord() {
+  editingType='record'; editingId=null;
+  openSheet('新增月度数据', recordFormHTML(), false);
+}
+function openEditRecord(id) {
+  const r = dataRecords.find(x=>x.id===id); if(!r) return;
+  editingType='record'; editingId=id;
+  openSheet('编辑月度数据', recordFormHTML(r), true);
+  document.querySelectorAll('.sheet-btn.delete').forEach(b=>b.remove());
+  const delBtn = document.createElement('button');
+  delBtn.className = 'sheet-btn delete'; delBtn.textContent='删除';
+  delBtn.onclick = () => confirmDelete('确认删除该月数据？', () => { dataRecords = dataRecords.filter(x=>x.id!==id); DB.save('dataRecords',dataRecords); closeSheet(); renderDashboard(); refreshCharts(); showToast('已删除'); });
+  document.querySelector('.sheet-header').insertBefore(delBtn, document.getElementById('sheet-save-btn'));
+}
+function recordFormHTML(r={}) {
+  return `
+    <div class="form-group"><label class="form-label">月份 (YYYY-MM) *</label><input class="form-input" id="f-ym" placeholder="如：2025-08" value="${r.ym||''}"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">任务金额(万) *</label><input class="form-input" id="f-task" type="number" value="${r.task||''}" placeholder="如：1200"></div>
+      <div class="form-group"><label class="form-label">完成金额(万) *</label><input class="form-input" id="f-done" type="number" value="${r.done||''}" placeholder="如：1080"></div>
+    </div>
+    <div style="font-size:13px;color:var(--text3);padding:8px 0">指标金额 = 任务金额 × 1.4（自动计算）<br>完成率、GAP缺口自动计算</div>
+  `;
+}
+
+// ===== Segmented Control Helper =====
+function segSelect(el) {
+  el.parentElement.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+function getSegValue(containerId) {
+  const active = document.querySelector(`#${containerId} .seg-btn.active`);
+  return active ? (active.dataset.val || active.textContent.replace(/[🔴🟡🟢🟢🟡🔴 ]/g,'').replace(/正常|预警|危机|高|中|低/g,'').trim() || active.textContent) : '';
+}
+function getSegRaw(containerId) {
+  const active = document.querySelector(`#${containerId} .seg-btn.active`);
+  if (!active) return '';
+  if (active.dataset.val) return active.dataset.val;
+  const text = active.textContent.trim();
+  if (text.includes('正常')) return 'green';
+  if (text.includes('预警')) return 'yellow';
+  if (text.includes('危机')) return 'red';
+  if (text.includes('战略')) return '战略';
+  if (text.includes('大型')) return '大型';
+  if (text.includes('中小')) return '中小';
+  if (text.includes('掉定')) return '掉定';
+  if (text.includes('今日')) return '今日待办';
+  if (text.includes('本周')) return '本周重点';
+  if (text.includes('月度')) return '月度目标';
+  if (text.includes('季度')) return '季度战役';
+  if (text.includes('年度')) return '年度版图';
+  if (text.includes('🔴')||text.includes('高')) return 'high';
+  if (text.includes('🟡')||text.includes('中')) return 'mid';
+  if (text.includes('🟢')||text.includes('低')) return 'low';
+  return text;
+}
+
+// ===== Save Sheet =====
+function saveSheet() {
+  if (editingType === 'client') saveClient();
+  else if (editingType === 'task') saveTask();
+  else if (editingType === 'intel') saveIntel();
+  else if (editingType === 'record') saveRecord();
+}
+
+function saveClient() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { showToast('请填写客户名称'); return; }
+  const contacts = Array.from(document.querySelectorAll('.f-contact')).map(i => i.value.trim()).filter(v => v);
+  const noteContent = document.getElementById('f-note') ? document.getElementById('f-note').value.trim() : '';
+  const data = {
+    name, short: document.getElementById('f-short').value.trim() || name.slice(0,4),
+    type: document.getElementById('f-type').value,
+    level: getSegRaw('f-level'),
+    stage: document.getElementById('f-stage').value,
+    health: getSegRaw('f-health'),
+    contacts,
+    annualCur: document.getElementById('f-annualCur').value.trim() || '0',
+    annualTarget: document.getElementById('f-annualTarget').value.trim() || '0',
+    nextAction: document.getElementById('f-nextAction').value.trim(),
+    deadline: document.getElementById('f-deadline').value.trim(),
+    risks: document.getElementById('f-risks').value.trim(),
+  };
+  if (editingId !== null) {
+    const idx = clients.findIndex(c => c.id === editingId);
+    if (idx >= 0) {
+      const existingNotes = clients[idx].notes || [];
+      let newNotes = existingNotes;
+      if (noteContent) {
+        newNotes = [{ id: Date.now(), content: noteContent, time: '刚刚' }].concat(existingNotes);
+      }
+      clients[idx] = Object.assign({}, clients[idx], data, { notes: newNotes });
+    }
+  } else {
+    data.id = Date.now();
+    data.notes = noteContent ? [{ id: Date.now(), content: noteContent, time: '刚刚' }] : [];
+    clients.unshift(data);
+  }
+  DB.save('clients', clients);
+  renderClients();
+  closeSheet();
+  showToast(editingId !== null ? '客户已更新' : '客户已添加');
+}
+
+function saveTask() {
+  const text = document.getElementById('f-text').value.trim();
+  if (!text) { showToast('请填写任务内容'); return; }
+  const data = {
+    text,
+    client: document.getElementById('f-client').value,
+    deadline: document.getElementById('f-deadline').value.trim(),
+    priority: getSegRaw('f-priority'),
+    section: getSegRaw('f-section') || '今日待办',
+  };
+  if (editingId !== null) {
+    const idx = tasks.findIndex(t => t.id === editingId);
+    if (idx >= 0) tasks[idx] = Object.assign({}, tasks[idx], data);
+  } else {
+    data.id = Date.now();
+    data.done = false;
+    tasks.push(data);
+  }
+  DB.save('tasks', tasks);
+  renderTasks();
+  closeSheet();
+  showToast(editingId !== null ? '任务已更新' : '任务已添加');
+}
+
+function saveIntel() {
+  const content = document.getElementById('f-content').value.trim();
+  if (!content) { showToast('请填写情报内容'); return; }
+  const data = {
+    type: getSegRaw('f-type') || 'news',
+    client: document.getElementById('f-client').value,
+    impact: getSegRaw('f-impact') || 'mid',
+    content,
+    time: document.getElementById('f-time').value.trim() || '刚刚',
+  };
+  if (editingId !== null) {
+    const idx = intel.findIndex(i => i.id === editingId);
+    if (idx >= 0) intel[idx] = Object.assign({}, intel[idx], data);
+  } else {
+    data.id = Date.now();
+    intel.unshift(data);
+  }
+  DB.save('intel', intel);
+  renderIntel();
+  closeSheet();
+  showToast(editingId !== null ? '情报已更新' : '情报已添加');
+}
+
+function saveRecord() {
+  const ym = document.getElementById('f-ym').value.trim();
+  if (!ym) { showToast('请填写月份'); return; }
+  if (!/^\d{4}-\d{2}$/.test(ym)) { showToast('月份格式应为 YYYY-MM'); return; }
+  const task = parseFloat(document.getElementById('f-task').value)||0;
+  const done = parseFloat(document.getElementById('f-done').value)||0;
+  if (editingId !== null) {
+    const idx = dataRecords.findIndex(r=>r.id===editingId);
+    if (idx>=0) dataRecords[idx] = Object.assign({}, dataRecords[idx], { ym, task, done });
+  } else {
+    dataRecords.push({ id: Date.now(), ym, task, done });
+  }
+  DB.save('dataRecords', dataRecords);
+  renderDashboard();
+  refreshCharts();
+  closeSheet();
+  showToast(editingId!==null ? '数据已更新' : '数据已添加');
+}
+
+// ===== Dialog =====
+function showDialog(title, msg, buttons) {
+  document.getElementById('dialog-title').textContent = title;
+  document.getElementById('dialog-msg').textContent = msg;
+  const actions = document.getElementById('dialog-actions');
+  actions.innerHTML = '';
+  buttons.forEach((b,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'dialog-btn' + (b.cancel ? ' cancel' : '') + (b.destructive ? ' destructive' : '');
+    btn.textContent = b.text;
+    btn.onclick = () => { closeDialog(); if (b.action) b.action(); };
+    if (i < buttons.length - 1 && !b.cancel) btn.style.borderRight = '0.5px solid var(--separator)';
+    actions.appendChild(btn);
+  });
+  document.getElementById('dialog-overlay').classList.add('show');
+}
+function closeDialog() { document.getElementById('dialog-overlay').classList.remove('show'); }
+function confirmDelete(msg, onConfirm) {
+  showDialog('确认', msg, [
+    { text:'删除', destructive:true, action: onConfirm },
+    { text:'取消', cancel:true }
+  ]);
+}
+function confirmDialog(title, msg, onConfirm) {
+  showDialog(title, msg, [
+    { text:'覆盖导入', destructive:true, action: onConfirm },
+    { text:'取消', cancel:true }
+  ]);
+}
+
+// ===== Data Backup (Export / Import) =====
+function exportData() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf('kam_') === 0) {
+      try { data[k.slice(4)] = JSON.parse(localStorage.getItem(k)); }
+      catch(e) { data[k.slice(4)] = localStorage.getItem(k); }
+    }
+  }
+  const payload = { _app:'大客户经理工作中枢', _version:1, _exportedAt:new Date().toISOString(), data };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const d = new Date();
+  const fn = 'KAM备份_' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '.json';
+  a.href = url; a.download = fn;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('已导出备份');
+}
+function importData(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function() {
+    try {
+      const parsed = JSON.parse(reader.result);
+      const data = parsed && parsed.data ? parsed.data : parsed;
+      confirmDialog('导入备份', '将用备份覆盖当前全部数据，确定继续？', function() {
+        Object.keys(data).forEach(function(key) {
+          if (key.charAt(0) === '_') return;
+          DB.save(key, data[key]);
+        });
+        reloadData();
+        showToast('备份已导入');
+      });
+    } catch(e) { showToast('文件格式错误'); }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+function reloadData() {
+  clients = DB.load('clients', seedClients).map(function(c) {
+    if (c.contact && !c.contacts) c.contacts = [c.contact];
+    if (!c.contacts) c.contacts = [];
+    if (!c.notes) c.notes = [];
+    return c;
+  });
+  tasks = DB.load('tasks', seedTasks);
+  intel = DB.load('intel', seedIntel);
+  dataRecords = DB.load('dataRecords', seedRecords);
+  renderClients(); renderTasks(); renderIntel(); renderDashboard();
+  if (chartTrend) { chartTrend.destroy(); chartTrend = null; }
+  if (chartCompact) { chartCompact.destroy(); chartCompact = null; }
+  if (currentTab === 2) setTimeout(initCharts, 60);
+}
+
+// ===== Toast =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ===== Init =====
+function safeRender(fn, name) {
+  try { fn(); }
+  catch (e) { console.error('[render] ' + name + ' 失败:', e); }
+}
+safeRender(renderClients, 'clients');
+safeRender(renderTasks, 'tasks');
+safeRender(renderIntel, 'intel');
+safeRender(renderDashboard, 'dashboard');
+
+// ===== iOS 视口高度兜底 =====
+// 部分 iOS Safari 上 100dvh 不随地址栏收起更新，导致页面被截断、划不到底。
+// 用真实 innerHeight 写一份 --real-vh，并在 CSS 中用 var(--real-vh) 兜底 100dvh。
+function setRealVH() {
+  var h = window.innerHeight;
+  document.documentElement.style.setProperty('--real-vh', h + 'px');
+  // 同步修正滚动容器所在链：app-wrap 使用真实高度
+  var w = document.querySelector('.app-wrap');
+  if (w) w.style.height = h + 'px';
+}
+setRealVH();
+window.addEventListener('resize', setRealVH);
+window.addEventListener('orientationchange', function(){ setTimeout(setRealVH, 200); });
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', setRealVH);
+}
+</script>
+</body>
+</html>
