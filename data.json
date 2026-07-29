@@ -1,5 +1,5 @@
 {
-  "_version": 5,
+  "_version": 6,
   "clients": [
     {
       "id": 1,
@@ -31,9 +31,9 @@
       ],
       "annualCur": "1900",
       "annualTarget": "2500",
-      "nextAction": "确认Q3交付排期",
+      "nextAction": "重新对接接任采购总监，稳固关键关系",
       "deadline": "明天",
-      "risks": "预算削减,关键人离职"
+      "risks": "预算削减,关键人离职,关键人变动"
     },
     {
       "id": 3,
