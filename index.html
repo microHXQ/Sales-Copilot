@@ -244,6 +244,11 @@ html, body {
 .contact-row .contact-del { width: 36px; height: 44px; border-radius: 10px; border: 0.5px solid var(--separator2); background: var(--card); color: var(--red); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .add-contact-btn { display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; border-radius: 10px; border: 0.5px solid var(--accent); background: var(--accent-bg); color: var(--accent); font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 4px; }
 .notes-section { margin-top: 8px; }
+.voice-toolbar { display: flex; gap: 8px; margin-bottom: 8px; }
+.voice-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--separator2); background: var(--card2); color: var(--text2); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.voice-btn:active { transform: scale(0.97); }
+.voice-btn.recording { background: var(--red); color: #fff; border-color: var(--red); }
+.voice-caption { font-size: 13px; color: var(--text3); background: var(--card2); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; line-height: 1.5; }
 .notes-toggle { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; color: var(--text2); font-size: 14px; font-weight: 600; cursor: pointer; }
 .notes-list { display: none; }
 .notes-list.show { display: block; }
@@ -949,6 +954,73 @@ function dlSortKey(t){
   if (isValidDT(t.deadline)) return new Date(t.deadline).getTime();
   return Infinity;
 }
+// ===== 语音输入 & 本地摘要 =====
+let _recognition = null, _dictating = false, _baseText = '', _activeTaId = '';
+function hasSpeech(){ return !!(window.SpeechRecognition || window.webkitSpeechRecognition); }
+function voiceToolbarHTML(taId){
+  return `<div class="voice-toolbar">
+    <button type="button" class="voice-btn" onclick="toggleDictation(this,'${taId}')">🎤 语音</button>
+    <button type="button" class="voice-btn" onclick="doSummary('${taId}')">✨ 摘要</button>
+  </div><div class="voice-caption" id="vc-${taId}" style="display:none"></div>`;
+}
+function toggleDictation(btn, taId){
+  if (!hasSpeech()){ showToast('当前浏览器不支持语音输入'); return; }
+  const ta = document.getElementById(taId); if(!ta) return;
+  if (_dictating){ stopDictation(); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const r = new SR();
+  r.lang = 'zh-CN'; r.continuous = true; r.interimResults = true;
+  _baseText = ta.value; _activeTaId = taId;
+  const cap = document.getElementById('vc-'+taId);
+  r.onresult = (e) => {
+    let interim = '';
+    for (let i=e.resultIndex;i<e.results.length;i++){
+      const res = e.results[i];
+      const alt = res[0];
+      if (alt.isFinal) _baseText += alt.transcript;
+      else interim += alt.transcript;
+    }
+    ta.value = _baseText + (interim ? '（'+interim+'）' : '');
+    if (cap){ cap.style.display='block'; cap.textContent = _baseText + (interim ? '（'+interim+'）' : ''); }
+  };
+  r.onerror = (ev) => { if (ev.error==='not-allowed'){ showToast('请允许麦克风权限'); stopDictation(); } };
+  r.onend = () => { if (_dictating){ try{ r.start(); }catch(_){} } };
+  _recognition = r; _dictating = true;
+  btn.classList.add('recording'); btn.textContent='🔴 停止';
+  try { r.start(); } catch(_){}
+  showToast('正在聆听，说完点停止');
+}
+function stopDictation(){
+  _dictating = false;
+  if (_recognition){ try{ _recognition.stop(); }catch(_){} _recognition=null; }
+  if (_activeTaId){ const ta=document.getElementById(_activeTaId); if (ta) ta.value = ta.value.replace(/（[^）]*）$/,''); }
+  document.querySelectorAll('.voice-btn.recording').forEach(b=>{ b.classList.remove('recording'); b.textContent='🎤 语音'; });
+  document.querySelectorAll('.voice-caption').forEach(c=>{ c.style.display='none'; });
+  _activeTaId='';
+}
+function doSummary(taId){
+  const ta = document.getElementById(taId); if(!ta) return;
+  const sum = summarizeText(ta.value);
+  if (!sum){ showToast('文字太少，无法总结'); return; }
+  ta.value = ta.value.trim() + '\n\n' + sum;
+  showToast('已生成摘要');
+}
+function summarizeText(text){
+  const raw = (text||'').trim();
+  if (raw.length < 12) return '';
+  const sents = raw.split(/[。！？!?\n]+/).map(s=>s.trim()).filter(s=>s.length>=4);
+  if (!sents.length) return '';
+  const kw = ['确定','签署','完成','达成','同意','决定','安排','跟进','截止','风险','金额','目标','计划','下次','行动','负责','确认','推进','评审','谈判','签约','交付','汇报','总结'];
+  const keySents = sents.filter(s=>kw.some(k=>s.includes(k)));
+  const picks = (keySents.length?keySents:sents).slice(0,3);
+  const freq = {};
+  sents.forEach(s=>{ const bs = s.match(/[一-鿿]{2,}/g)||[]; bs.forEach(w=>{ for(let i=0;i<w.length-1;i++){ const g=w.slice(i,i+2); freq[g]=(freq[g]||0)+1; } }); });
+  const top = Object.keys(freq).filter(g=>freq[g]>1).sort((a,b)=>freq[b]-freq[a]).slice(0,6);
+  let out = '【自动摘要】\n';
+  picks.forEach((s,i)=> out += (i+1)+'. '+s+'\n');
+  if (top.length) out += '\n【关键词】'+top.join('、');
+  return out.trim();
+}
 function clientFormHTML(c={}) {
   return `
     <div class="form-group"><label class="form-label">客户名称 *</label><input class="form-input" id="f-name" placeholder="如：华为技术有限公司" value="${c.name||''}"></div>
@@ -994,7 +1066,8 @@ function clientFormHTML(c={}) {
     <div class="form-group"><label class="form-label">风险标签（逗号分隔）</label><input class="form-input" id="f-risks" placeholder="如：预算削减,竞品介入" value="${c.risks||''}"></div>
     <div class="form-group notes-section">
       <label class="form-label">重要事项记录</label>
-      <textarea class="form-textarea" id="f-note" placeholder="输入新的重要事项，保存后自动追加到历史..." style="min-height:80px"></textarea>
+      ${voiceToolbarHTML('f-note')}
+      <textarea class="form-textarea" id="f-note" placeholder="点🎤语音输入，或✨生成摘要…" style="min-height:80px"></textarea>
       ${(c.notes && c.notes.length) ? `
         <div class="notes-toggle" onclick="this.nextElementSibling.classList.toggle('show'); this.querySelector('span').textContent = this.nextElementSibling.classList.contains('show') ? '收起历史' : '展开历史 (${c.notes.length})'">
           <span>展开历史 (${c.notes.length})</span>
@@ -1028,7 +1101,7 @@ function openEditTask(id) {
 function taskFormHTML(t={}) {
   const clientOptions = clients.map(c=>`<option ${t.client===c.short?'selected':''}>${c.short}</option>`).join('');
   return `
-    <div class="form-group"><label class="form-label">任务内容 *</label><textarea class="form-textarea" id="f-text" placeholder="如：华为框架合同签署跟进">${t.text||''}</textarea></div>
+    <div class="form-group"><label class="form-label">任务内容 *</label>${voiceToolbarHTML('f-text')}<textarea class="form-textarea" id="f-text" placeholder="如：华为框架合同签署跟进">${t.text||''}</textarea></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">关联客户</label>
         <select class="form-select" id="f-client"><option value="">无</option>${clientOptions}</select></div>
@@ -1077,7 +1150,7 @@ function intelFormHTML(i={}) {
         <button class="seg-btn ${i.impact==='mid'?'active':''}" onclick="segSelect(this)" data-val="mid">🟡 中</button>
         <button class="seg-btn ${i.impact==='low'?'active':''}" onclick="segSelect(this)" data-val="low">🟢 低</button>
       </div></div>
-    <div class="form-group"><label class="form-label">情报内容 *</label><textarea class="form-textarea" id="f-content" placeholder="输入情报内容..." style="min-height:100px">${i.content||''}</textarea></div>
+    <div class="form-group"><label class="form-label">情报内容 *</label>${voiceToolbarHTML('f-content')}<textarea class="form-textarea" id="f-content" placeholder="输入情报内容..." style="min-height:100px">${i.content||''}</textarea></div>
     <div class="form-group"><label class="form-label">时间（可选，日历选择）</label><input class="form-input" id="f-time" type="date" value="${isValidDate(i.time)?i.time:''}"><input type="hidden" id="f-time-raw" value="${escapeHtml(i.time||'')}"></div>
   `;
 }
