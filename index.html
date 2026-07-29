@@ -8,8 +8,8 @@
 <meta http-equiv="Expires" content="0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="客户经理中枢">
-<title>大客户经理工作中枢</title>
+<meta name="apple-mobile-web-app-title" content="Sales Copilot">
+<title>Sales Copilot</title>
 <link rel="icon" href="data:,">
 <script src="chart.umd.min.js"></script>
 <style>
@@ -1255,7 +1255,7 @@ function exportData() {
       catch(e) { data[k.slice(4)] = localStorage.getItem(k); }
     }
   }
-  const payload = { _app:'大客户经理工作中枢', _version:1, _exportedAt:new Date().toISOString(), data };
+  const payload = { _app:'Sales Copilot', _version:1, _exportedAt:new Date().toISOString(), data };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
