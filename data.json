@@ -1,5 +1,5 @@
 {
-  "_version": 3,
+  "_version": 4,
   "clients": [
     {
       "id": 1,
@@ -254,6 +254,14 @@
       "impact": "mid",
       "content": "联想集团宣布与微软深化AI PC合作，供应链端预计新增组件采购需求，可能扩大与我方合作范围。",
       "time": "2天前"
+    },
+    {
+      "type": "person",
+      "client": "宁德时代",
+      "impact": "high",
+      "content": "采购总监张华预计下周调任海外事业部，继任者未定，决策链可能重组，需重新建立关键人关系。",
+      "time": "刚刚",
+      "id": 6
     }
   ],
   "dataRecords": [
