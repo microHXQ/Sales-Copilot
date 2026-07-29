@@ -91,7 +91,7 @@ html, body {
 .page {
   width: 25%; height: 100%; overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch; padding: 12px 16px;
-  padding-bottom: calc(100px + var(--safe-bottom));
+  padding-bottom: calc(70px + 10px);
 }
 .page::-webkit-scrollbar { display: none; }
 
@@ -197,7 +197,7 @@ html, body {
 .intel-time { font-size: 12px; color: var(--text4); margin-top: 8px; }
 
 /* Bottom Bar */
-.bottom-bar { position: absolute; bottom: 0; left: 0; right: 0; background: var(--blur-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 0.5px solid var(--separator2); display: flex; padding: 6px 0 calc(6px + var(--safe-bottom)); z-index: 100; }
+.bottom-bar { position: absolute; bottom: 0; left: 0; right: 0; background: var(--blur-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 0.5px solid var(--separator2); display: flex; padding: 6px 0 calc(6px + 14px); z-index: 100; }
 .bottom-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px; cursor: pointer; transition: opacity 0.15s; }
 .bottom-tab:active { opacity: 0.6; }
 .bottom-tab svg { width: 26px; height: 26px; }
@@ -208,7 +208,7 @@ html, body {
 .bottom-tab:not(.active) span { color: var(--text3); }
 
 /* FAB */
-.fab { position: absolute; right: 20px; bottom: calc(90px + var(--safe-bottom)); width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 4px 16px rgba(0,122,255,0.4); cursor: pointer; z-index: 50; transition: transform 0.15s; border: none; }
+.fab { position: absolute; right: 20px; bottom: calc(74px + 6px); width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 4px 16px rgba(0,122,255,0.4); cursor: pointer; z-index: 50; transition: transform 0.15s; border: none; }
 .fab:active { transform: scale(0.9); }
 
 /* ===== Form Sheet (iOS Modal) ===== */
